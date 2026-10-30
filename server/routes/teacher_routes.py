@@ -204,4 +204,3 @@ async def upload_curriculum(
         "subject": subj.name,
         "message": "Curriculum successfully processed and indexed for retrieval."
     }
-

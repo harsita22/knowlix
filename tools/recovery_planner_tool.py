@@ -102,4 +102,3 @@ class RecoveryPlannerTool(Tool):
         ]
         plan["total_estimated_hours"] = 2.25
         return json.dumps(plan, indent=2)
-

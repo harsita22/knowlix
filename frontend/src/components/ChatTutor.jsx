@@ -1,18 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Bot, Send, Sparkles, BookOpen, CheckCircle, HelpCircle,
-  Lightbulb, ArrowRight, RefreshCw, Code2, Compass
+  Bot, Send, Sparkles, BookOpen, HelpCircle,
+  Lightbulb, ArrowRight, RefreshCw, Code, CheckCircle,
+  Cpu, Wrench, FileQuestion, BookMarked
 } from 'lucide-react';
 import { api } from '../api/client';
 
 export default function ChatTutor({ defaultTopic = 'Recursion' }) {
   const [topic, setTopic] = useState(defaultTopic);
+  const [isCustomTopic, setIsCustomTopic] = useState(false);
   const [message, setMessage] = useState('');
   const [style, setStyle] = useState('step_by_step');
   const [chatHistory, setChatHistory] = useState([
     {
       sender: 'bot',
-      text: `Hey there! I'm your Knowlix Socratic AI Tutor. 🎓\n\nI'm ready to help you explore and master **${defaultTopic}**. We can solve real practice problems together, debug tricky concepts, or break things down step-by-step.\n\nWhat would you like to work on right now?`,
+      text: `Hello! I'm your Knowlix AI Tutor. 🎓\n\nI can help you solve **any problem or homework question** you have. You can:\n• Paste a math equation, physics problem, or code snippet\n• Ask me to walk you through a problem step-by-step\n• Paste your attempt and ask me to find your mistake\n• Ask for an intuitive everyday analogy\n\nWhat problem would you like to work on right now?`,
       style: 'step_by_step',
     },
   ]);
@@ -27,19 +29,27 @@ export default function ChatTutor({ defaultTopic = 'Recursion' }) {
     scrollToBottom();
   }, [chatHistory, loading]);
 
-  const styles = [
-    { id: 'step_by_step', label: 'Step-by-Step' },
-    { id: 'analogy', label: 'Everyday Analogy' },
-    { id: 'practice', label: 'Practice Problem' },
-    { id: 'simple', label: 'Simple & Plain' },
-    { id: 'example_based', label: 'Example-First' },
+  const presetTopics = [
+    'Recursion',
+    'Quadratic Equations',
+    'Photosynthesis',
+    'Arrays & Lists',
+    'Calculus & Derivatives',
+    'Physics & Mechanics',
   ];
 
-  const quickStarters = [
-    { label: 'Walk me through a problem', prompt: `Can we solve a step-by-step problem on ${topic}? Walk me through it without giving away the answer right away.` },
-    { label: 'Explain with an analogy', prompt: `Can you explain the core mechanism of ${topic} using a relatable everyday analogy?` },
-    { label: 'Give me a practice challenge', prompt: `Give me a diagnostic practice question or code drill on ${topic} to test my understanding.` },
-    { label: 'Why is this so tricky?', prompt: `What is the most common mistake students make in ${topic}, and how do I avoid it?` },
+  const modes = [
+    { id: 'step_by_step', label: 'Step-by-Step Solver', icon: Wrench, desc: 'Guided walkthrough of your problem' },
+    { id: 'analogy', label: 'Everyday Analogy', icon: Lightbulb, desc: 'Intuitive real-world metaphors' },
+    { id: 'practice', label: 'Practice Drills', icon: FileQuestion, desc: 'Diagnostic micro-quizzes' },
+    { id: 'example_based', label: 'Worked Examples', icon: Code, desc: 'Concrete code & formula demos' },
+  ];
+
+  const followUpSuggestions = [
+    'Give me a hint on what to do next',
+    'Can you show me a similar small example?',
+    'Why is this step necessary?',
+    'Please show me the full complete solution',
   ];
 
   const handleSend = async (textToSend) => {
@@ -51,7 +61,7 @@ export default function ChatTutor({ defaultTopic = 'Recursion' }) {
     setChatHistory(newChat);
     setLoading(true);
 
-    // Format previous history for Gemini
+    // Multi-turn context payload
     const historyPayload = newChat.slice(0, -1).map((m) => ({
       role: m.sender === 'user' ? 'user' : 'assistant',
       content: m.text,
@@ -74,7 +84,7 @@ export default function ChatTutor({ defaultTopic = 'Recursion' }) {
         ...prev,
         {
           sender: 'bot',
-          text: `I ran into an issue connecting to the learning model: ${err.message}. Please try again!`,
+          text: `I ran into an issue connecting to Gemini: ${err.message}. Please try again!`,
           isError: true,
         },
       ]);
@@ -83,142 +93,197 @@ export default function ChatTutor({ defaultTopic = 'Recursion' }) {
     }
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    handleSend();
+  const handleResetChat = () => {
+    setChatHistory([
+      {
+        sender: 'bot',
+        text: `Starting a fresh problem session for **${topic}**! What question or problem do you want to solve?`,
+        style: style,
+      },
+    ]);
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden flex flex-col h-[700px] shadow-sm">
-      {/* Tutor Header & Controls */}
-      <div className="p-4 border-b border-slate-100 bg-[#faf8fd] flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#342767] text-white flex items-center justify-center font-bold shadow-xs">
-            <Bot className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-900 text-sm">Knowlix Socratic Tutor</span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Active Pair Learning
-              </span>
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[720px]">
+      {/* Top Controls Bar */}
+      <div className="p-4 bg-slate-50 border-b border-slate-200 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold shadow-xs">
+              <Bot className="w-5 h-5" />
             </div>
-            <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
-              <span>Topic:</span>
-              <input
-                type="text"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                className="font-bold text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-300 text-xs w-36 focus:outline-none focus:ring-1 focus:ring-[#6e46e6]"
-              />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-900 text-sm">Knowlix Interactive AI Tutor</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Gemini Live
+                </span>
+              </div>
+              <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                <span>Active Topic:</span>
+                {isCustomTopic ? (
+                  <input
+                    type="text"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    placeholder="Type any subject/topic..."
+                    className="font-semibold text-slate-900 bg-white px-2 py-0.5 rounded border border-brand-400 text-xs w-48 focus:outline-none"
+                    autoFocus
+                  />
+                ) : (
+                  <select
+                    value={topic}
+                    onChange={(e) => {
+                      if (e.target.value === 'custom') {
+                        setIsCustomTopic(true);
+                        setTopic('');
+                      } else {
+                        setTopic(e.target.value);
+                      }
+                    }}
+                    className="font-semibold text-slate-800 bg-white px-2 py-0.5 rounded border border-slate-300 text-xs"
+                  >
+                    {presetTopics.map((pt) => (
+                      <option key={pt} value={pt}>{pt}</option>
+                    ))}
+                    <option value="custom">✏️ Type your own custom topic...</option>
+                  </select>
+                )}
+                {isCustomTopic && (
+                  <button
+                    onClick={() => {
+                      setIsCustomTopic(false);
+                      setTopic('Recursion');
+                    }}
+                    className="text-[11px] text-brand-600 hover:underline font-semibold"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Teaching Style Pills */}
-        <div className="flex items-center gap-1 bg-[#f2f2f7] p-1 rounded-xl text-xs">
-          {styles.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setStyle(s.id)}
-              className={`px-3 py-1.5 rounded-lg transition font-medium text-xs ${
-                style === s.id
-                  ? 'bg-white text-slate-900 shadow-xs font-bold'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Quick Problem Solving Starters */}
-      <div className="px-6 py-2.5 bg-white border-b border-slate-100 flex items-center gap-2 overflow-x-auto text-xs">
-        <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1 whitespace-nowrap">
-          <Lightbulb className="w-3.5 h-3.5 text-amber-500" /> Quick Starters:
-        </span>
-        {quickStarters.map((qs, idx) => (
           <button
-            key={idx}
-            onClick={() => handleSend(qs.prompt)}
-            disabled={loading}
-            className="px-3 py-1 rounded-full border border-slate-200 hover:border-[#6e46e6] hover:bg-[#faf8fe] text-slate-600 hover:text-[#6e46e6] transition text-xs whitespace-nowrap font-medium"
+            onClick={handleResetChat}
+            className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition"
+            title="Start a new question"
           >
-            {qs.label}
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>New Problem</span>
           </button>
-        ))}
+        </div>
+
+        {/* Tutoring Mode Selector */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+          <span className="text-[11px] font-bold uppercase text-slate-400 mr-1">Mode:</span>
+          {modes.map((m) => {
+            const Icon = m.icon;
+            const isSelected = style === m.id;
+            return (
+              <button
+                key={m.id}
+                onClick={() => setStyle(m.id)}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                  isSelected
+                    ? 'bg-brand-600 text-white shadow-xs'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                }`}
+                title={m.desc}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{m.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Messages Stream */}
-      <div className="flex-1 p-6 overflow-y-auto space-y-5 bg-[#fcfbfe]">
+      <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/50">
         {chatHistory.map((msg, i) => (
           <div
             key={i}
             className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] rounded-2xl p-4 text-sm leading-relaxed shadow-xs ${
+              className={`max-w-[85%] rounded-2xl p-4 text-sm leading-relaxed ${
                 msg.sender === 'user'
-                  ? 'bg-[#342767] text-white rounded-br-xs'
-                  : 'bg-white text-slate-800 rounded-bl-xs border border-slate-100'
+                  ? 'bg-brand-600 text-white rounded-br-xs shadow-xs'
+                  : 'bg-white text-slate-800 rounded-bl-xs border border-slate-200 shadow-xs'
               }`}
             >
               <div className="whitespace-pre-wrap">{msg.text}</div>
 
-              {/* Socratic Check-In Box */}
+              {/* Socratic Checkpoint Card */}
               {msg.checkQuestion && (
-                <div className="mt-3.5 p-3.5 bg-[#fbf9fe] border border-dashed border-[#cbb8f7] rounded-xl text-slate-800 text-xs">
-                  <div className="font-bold flex items-center gap-1.5 mb-1 text-[#6e46e6]">
-                    <HelpCircle className="w-4 h-4 text-[#6e46e6]" />
-                    Socratic Checkpoint:
+                <div className="mt-3 p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-slate-800 text-xs">
+                  <div className="font-bold flex items-center gap-1.5 mb-1 text-amber-800">
+                    <CheckCircle className="w-3.5 h-3.5 text-amber-600" />
+                    Socratic Question for You:
                   </div>
                   <div className="text-slate-700 font-medium">{msg.checkQuestion}</div>
                   <button
                     onClick={() => {
-                      setMessage(`Regarding that checkpoint: `);
+                      setMessage(`Regarding that: `);
                     }}
-                    className="mt-2 text-[11px] font-bold text-[#6e46e6] hover:underline flex items-center gap-1"
+                    className="mt-2 text-[11px] font-bold text-brand-600 hover:underline flex items-center gap-1"
                   >
-                    <span>Reply to this check</span>
+                    <span>Click to reply to this question</span>
                     <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
               )}
 
-              {/* Verified Curriculum Sources */}
+              {/* Curriculum Source Citation */}
               {msg.citations && msg.citations.length > 0 && (
-                <div className="mt-2.5 pt-2 border-t border-slate-100 text-[11px] text-slate-400 flex items-center gap-1.5">
+                <div className="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-400 flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Grounded in: <strong>{msg.citations.join(', ')}</strong></span>
+                  <span>Curriculum Source: {msg.citations.join(', ')}</span>
                 </div>
               )}
             </div>
           </div>
         ))}
+
         {loading && (
-          <div className="flex items-center gap-2 p-3 bg-white rounded-xl border border-slate-100 w-fit text-slate-500 text-xs shadow-xs">
-            <Sparkles className="w-4 h-4 animate-spin text-[#6e46e6]" />
-            <span>Knowlix is analyzing curriculum & scaffolding your response...</span>
+          <div className="flex items-center gap-2 p-3 bg-white rounded-xl border border-slate-200 w-fit text-slate-500 text-xs shadow-xs">
+            <Sparkles className="w-4 h-4 animate-spin text-brand-600" />
+            <span>Knowlix is solving & reasoning step-by-step with Gemini...</span>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Bar */}
-      <form onSubmit={handleFormSubmit} className="p-4 border-t border-slate-100 bg-white flex gap-2 items-center">
+      {/* Suggested Follow-Ups Pills */}
+      <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center gap-2 overflow-x-auto text-xs">
+        <span className="text-slate-400 font-bold uppercase text-[10px] whitespace-nowrap">Suggested:</span>
+        {followUpSuggestions.map((sug, idx) => (
+          <button
+            key={idx}
+            onClick={() => handleSend(sug)}
+            disabled={loading}
+            className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-full text-slate-600 hover:text-slate-900 text-xs whitespace-nowrap transition"
+          >
+            {sug}
+          </button>
+        ))}
+      </div>
+
+      {/* User Input Form */}
+      <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="p-4 border-t border-slate-200 bg-white flex gap-2">
         <input
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder={`Ask a question, paste code, or type your answer for ${topic}...`}
-          className="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#4c35b5] focus:border-[#4c35b5] text-slate-800 placeholder-slate-400"
+          placeholder={`Ask ANY question or problem in ${topic || 'any subject'}...`}
+          className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-slate-800"
         />
         <button
           type="submit"
           disabled={loading || !message.trim()}
-          className="px-6 py-3 bg-[#342767] hover:bg-[#281d52] disabled:opacity-40 text-white rounded-xl text-sm font-semibold flex items-center gap-2 shadow-xs transition duration-150"
+          className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white rounded-xl text-sm font-semibold flex items-center gap-2 transition"
         >
           <span>Send</span>
           <Send className="w-4 h-4" />

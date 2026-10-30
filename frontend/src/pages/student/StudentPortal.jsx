@@ -66,24 +66,6 @@ export default function StudentPortal() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
-      {/* Lovable Student Welcome Hero (Exact Match to Screenshot 2) */}
-      <div className="text-center py-4 mb-8">
-        <span className="inline-block bg-[#f3e8ff] text-[#7c3aed] text-xs font-bold px-3.5 py-1 rounded-full uppercase tracking-wider mb-3">
-          STUDENT DASHBOARD
-        </span>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-          Welcome, {dashboardData?.student_name || 'Demo Student'}!
-        </h1>
-        <p className="text-sm text-slate-500 mt-2 max-w-xl mx-auto">
-          Your courses, adaptive learning path and progress insights will live here.
-        </p>
-
-        {/* Milestone Callout Box from Lovable */}
-        <div className="mt-6 border border-dashed border-[#cbb8f7] bg-[#faf8fe] rounded-2xl p-5 text-center max-w-2xl mx-auto text-slate-600 text-xs sm:text-sm">
-          The full dashboard experience is the next milestone — sign-in, role routing and sessions are wired up and working.
-        </div>
-      </div>
-
       {/* Navigation Sub-bar */}
       <div className="flex items-center gap-1 overflow-x-auto pb-4 mb-6 border-b border-slate-200">
         {navItems.map((item) => {
