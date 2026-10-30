@@ -47,7 +47,7 @@ class AgentExecutor:
             if "final_answer" in data and not trace and not nudged:
                 nudged = True  # an agent must ground its answer in at least one tool result
                 messages += [{"role": "assistant", "content": json.dumps(data)},
-                             {"role": "user", "content": "Do not answer from memory. Call list_files, then read the data with a tool first."}]
+                             {"role": "user", "content": "Do not answer from memory. Call an appropriate tool (such as curriculum_retrieval, student_performance, list_files, or read_file) first to ground your answer."}]
                 continue
             if "final_answer" in data:
                 if verbose:

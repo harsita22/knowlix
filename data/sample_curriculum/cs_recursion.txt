@@ -1,0 +1,10 @@
+Recursion & Algorithms Curriculum Guide:
+Recursion is a programming technique where a function calls itself to solve a smaller instance of the same problem.
+Key Components:
+1. Base Case: The condition under which the function returns a concrete result without making further recursive calls. This terminates execution and prevents infinite loops.
+2. Recursive Case: The section of code that calls the function with modified, reduced arguments that make progress toward the base case.
+3. Call Stack Mechanics: Each recursive call pushes a new stack frame containing local variables and return addresses. When the base case is reached, stack frames are popped in LIFO (Last-In-First-Out) order, unwinding return values back to the original caller.
+Common Student Misconceptions:
+- Treating recursion like an iterative while-loop.
+- Forgetting to return the result of the recursive call.
+- Neglecting the base case, resulting in StackOverflowError / maximum recursion depth exceeded.

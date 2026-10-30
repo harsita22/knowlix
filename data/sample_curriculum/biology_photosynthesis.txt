@@ -1,0 +1,7 @@
+Photosynthesis Curriculum Guide:
+Photosynthesis is the fundamental biological process by which green plants and certain other organisms transform light energy into chemical energy.
+Chemical Formula: 6CO2 + 6H2O + Light Energy -> C6H12O6 + 6O2
+Key Stages:
+1. Light-Dependent Reactions: Occur in the thylakoid membranes of chloroplasts. Chlorophyll pigments absorb solar photons, splitting water molecules (photolysis) to release oxygen gas and generate energetic ATP and NADPH molecules.
+2. Calvin Cycle (Light-Independent Reactions): Occurs in the stroma of the chloroplast. The enzyme RuBisCO fixes atmospheric carbon dioxide (CO2) utilizing the ATP and NADPH produced in the light reactions to synthesize high-energy sugars (glucose).
+Core Prerequisites: Cell Structure, Chloroplast anatomy, Energy transfer molecules (ATP/ADP).
