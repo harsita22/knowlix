@@ -1,25 +1,22 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
-import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
 import StudentPortal from './pages/student/StudentPortal';
 import TeacherPortal from './pages/teacher/TeacherPortal';
 
 function AppContent() {
   const { user, role } = useAuth();
-  const [view, setView] = useState('home');
+
+  if (!user) {
+    return <LoginPage />;
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      <Navbar onNavigate={setView} currentTab={view} />
+    <div className="min-h-screen bg-[#faf8fd] flex flex-col font-sans">
+      <Navbar />
       <main className="flex-1">
-        {!user ? (
-          <LandingPage onExplore={() => setView('portal')} />
-        ) : role === 'teacher' ? (
-          <TeacherPortal />
-        ) : (
-          <StudentPortal />
-        )}
+        {role === 'teacher' ? <TeacherPortal /> : <StudentPortal />}
       </main>
     </div>
   );
@@ -32,4 +29,3 @@ export default function App() {
     </AuthProvider>
   );
 }
-

@@ -51,6 +51,7 @@ class TutorChatRequest(BaseModel):
     topic: str
     message: str
     teaching_style: str = "step_by_step"  # analogy, step_by_step, simple, example_based, practice
+    history: Optional[List[Dict[str, str]]] = []
 
 
 class TutorChatResponse(BaseModel):

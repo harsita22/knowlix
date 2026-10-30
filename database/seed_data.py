@@ -25,10 +25,22 @@ def seed_all():
             full_name="Dr. Alan Turing",
             role="teacher"
         )
+        teacher_demo = User(
+            email="teacher@knowlix.demo",
+            hashed_password=hash_password("teacher123"),
+            full_name="Demo Teacher",
+            role="teacher"
+        )
         student1 = User(
             email="student1@knowlix.edu",
             hashed_password=hash_password("student123"),
             full_name="Sami (Student S1)",
+            role="student"
+        )
+        student_demo = User(
+            email="student@knowlix.demo",
+            hashed_password=hash_password("student123"),
+            full_name="Demo Student",
             role="student"
         )
         student2 = User(
@@ -37,7 +49,7 @@ def seed_all():
             full_name="Maya Lin (Student S2)",
             role="student"
         )
-        db.add_all([teacher, student1, student2])
+        db.add_all([teacher, teacher_demo, student1, student_demo, student2])
         db.commit()
 
         # 2. Classes
@@ -50,6 +62,8 @@ def seed_all():
         db.add_all([
             StudentEnrollment(student_id=student1.id, class_id=class_cs.id),
             StudentEnrollment(student_id=student1.id, class_id=class_math.id),
+            StudentEnrollment(student_id=student_demo.id, class_id=class_cs.id),
+            StudentEnrollment(student_id=student_demo.id, class_id=class_math.id),
             StudentEnrollment(student_id=student2.id, class_id=class_cs.id),
         ])
         db.commit()
@@ -101,38 +115,40 @@ def seed_all():
         db.add_all(prereqs)
         db.commit()
 
-        # 7. Topic Mastery for Student S1
-        db.add_all([
-            TopicMastery(student_id=student1.id, topic_id=t_arrays.id, mastery_score=82.0, attempts=3, accuracy=0.85, status="mastered"),
-            TopicMastery(student_id=student1.id, topic_id=t_sort.id, mastery_score=64.0, attempts=4, accuracy=0.62, status="in_progress"),
-            TopicMastery(student_id=student1.id, topic_id=t_rec.id, mastery_score=31.0, attempts=5, accuracy=0.28, status="struggling"),
-            TopicMastery(student_id=student1.id, topic_id=t_funcs.id, mastery_score=78.0, attempts=2, accuracy=0.80, status="mastered"),
-            TopicMastery(student_id=student1.id, topic_id=t_m_linear.id, mastery_score=88.0, attempts=3, accuracy=0.90, status="mastered"),
-            TopicMastery(student_id=student1.id, topic_id=t_m_quad.id, mastery_score=45.0, attempts=3, accuracy=0.45, status="struggling"),
-        ])
+        # 7. Topic Mastery for Student S1 & Demo Student
+        for s_user in [student1, student_demo]:
+            db.add_all([
+                TopicMastery(student_id=s_user.id, topic_id=t_arrays.id, mastery_score=82.0, attempts=3, accuracy=0.85, status="mastered"),
+                TopicMastery(student_id=s_user.id, topic_id=t_sort.id, mastery_score=64.0, attempts=4, accuracy=0.62, status="in_progress"),
+                TopicMastery(student_id=s_user.id, topic_id=t_rec.id, mastery_score=31.0, attempts=5, accuracy=0.28, status="struggling"),
+                TopicMastery(student_id=s_user.id, topic_id=t_funcs.id, mastery_score=78.0, attempts=2, accuracy=0.80, status="mastered"),
+                TopicMastery(student_id=s_user.id, topic_id=t_m_linear.id, mastery_score=88.0, attempts=3, accuracy=0.90, status="mastered"),
+                TopicMastery(student_id=s_user.id, topic_id=t_m_quad.id, mastery_score=45.0, attempts=3, accuracy=0.45, status="struggling"),
+            ])
         db.commit()
 
-        # 8. Misconceptions for Student S1
-        db.add_all([
-            Misconception(
-                student_id=student1.id,
-                topic_id=t_rec.id,
-                description="Confuses recursive stack unwinding with iterative loops, omitting base-case return values.",
-                evidence="Repeatedly fails recursive return step in factorial and Fibonacci quiz; wrote return f(n-1) without accumulating return value.",
-                confidence_score=0.92,
-                suggested_correction="Illustrate execution tree with visual activation frames showing value propagation backward.",
-                resolution_status="detected"
-            ),
-            Misconception(
-                student_id=student1.id,
-                topic_id=t_m_quad.id,
-                description="Attempts to apply square root directly to both sides of quadratic equation before isolating the square term.",
-                evidence="Solved x^2 + 6x + 9 = 25 by taking sqrt(x^2) + sqrt(6x) + 3.",
-                confidence_score=0.88,
-                suggested_correction="Review distributive properties and difference of squares before taking radicals.",
-                resolution_status="detected"
-            )
-        ])
+        # 8. Misconceptions for Student S1 & Demo Student
+        for s_user in [student1, student_demo]:
+            db.add_all([
+                Misconception(
+                    student_id=s_user.id,
+                    topic_id=t_rec.id,
+                    description="Confuses recursive stack unwinding with iterative loops, omitting base-case return values.",
+                    evidence="Repeatedly fails recursive return step in factorial and Fibonacci quiz; wrote return f(n-1) without accumulating return value.",
+                    confidence_score=0.92,
+                    suggested_correction="Illustrate execution tree with visual activation frames showing value propagation backward.",
+                    resolution_status="detected"
+                ),
+                Misconception(
+                    student_id=s_user.id,
+                    topic_id=t_m_quad.id,
+                    description="Attempts to apply square root directly to both sides of quadratic equation before isolating the square term.",
+                    evidence="Solved x^2 + 6x + 9 = 25 by taking sqrt(x^2) + sqrt(6x) + 3.",
+                    confidence_score=0.88,
+                    suggested_correction="Review distributive properties and difference of squares before taking radicals.",
+                    resolution_status="detected"
+                )
+            ])
         db.commit()
 
         # 9. Assessments & Answers

@@ -1,5 +1,6 @@
-"""Student endpoints with strict student data isolation."""
+"""Student endpoints with strict student data isolation and live Socratic AI Tutor."""
 import json
+import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -15,6 +16,7 @@ from server.schemas.api_models import (
     RecoveryPlanCreateRequest
 )
 from tools import build_tools
+from agent.llm import LLM, DryRunLLM
 
 router = APIRouter(prefix="/api/student", tags=["Student Portal"])
 
@@ -175,31 +177,88 @@ def tutor_chat(
     db: Session = Depends(get_db)
 ):
     tools = build_tools()
-    # 1. Retrieve curriculum grounding
+    
+    # 1. Fetch student's real mastery and misconceptions from DB
+    mastery = db.query(TopicMastery).join(Topic).filter(
+        TopicMastery.student_id == current_user.id,
+        Topic.name.ilike(f"%{req.topic}%")
+    ).first()
+
+    misconceptions = db.query(Misconception).join(Topic).filter(
+        Misconception.student_id == current_user.id,
+        Topic.name.ilike(f"%{req.topic}%")
+    ).all()
+
+    # 2. Retrieve curriculum grounding
     rag_result = json.loads(tools["curriculum_retrieval"].execute(query=req.message or req.topic))
     citations = rag_result.get("source_citations", [])
-
-    # 2. Get pedagogical strategy
-    tutor_guide = json.loads(tools["adaptive_tutor"].execute(
-        topic=req.topic, style=req.teaching_style, student_level="intermediate"
-    ))
-
-    # 3. Assemble pedagogical response
-    grounded_text = ""
+    grounded_context = ""
     if rag_result.get("matches"):
-        grounded_text = rag_result["matches"][0]["content"]
+        grounded_context = "\n".join(m["content"] for m in rag_result["matches"][:2])
 
-    strategy_desc = tutor_guide.get("pedagogical_strategy", "")
-    check_q = tutor_guide.get("comprehension_check_question", "")
+    score_info = f"Current mastery score: {mastery.mastery_score}% ({mastery.status})" if mastery else "First time exploring this topic."
+    misc_info = ""
+    if misconceptions:
+        misc_info = "Known cognitive misconceptions: " + "; ".join(f"{m.description} (Evidence: {m.evidence})" for m in misconceptions)
 
-    # Clean conversational response grounded in pedagogical strategy
-    reply = (
-        f"**Exploring {req.topic}** ({req.teaching_style.replace('_', ' ').title()} Mode):\n\n"
-        f"{strategy_desc}\n\n"
-    )
-    if grounded_text:
-        reply += f"**Key Curriculum Insight:**\n> {grounded_text}\n\n"
-    reply += f"Remember: mastering this concept builds directly into your upcoming learning checkpoints!"
+    # 3. Construct lively, Socratic system prompt
+    style_label = req.teaching_style.replace('_', ' ').title()
+    system_prompt = f"""You are Knowlix, a warm, lively, encouraging, and highly effective Socratic AI tutor.
+You are actively helping student {current_user.full_name} solve their learning challenges and master concepts.
+Topic: {req.topic}
+Student Diagnostic Profile: {score_info}
+{misc_info}
+
+Teaching Style Mode: {style_label}
+- If 'Analogy': Connect technical ideas to vivid, tangible everyday experiences.
+- If 'Step By Step': Walk through the problem or concept one clear step at a time, checking in at each step.
+- If 'Practice': Give an immediate micro-challenge or problem for the student to attempt.
+- If 'Simple': Explain with intuitive, plain English without heavy jargon.
+- If 'Example Based': Walk through a small concrete working example showing inputs transforming into outputs.
+
+Pedagogical Directives:
+1. Be lively, conversational, enthusiastic, and supportive. Use light formatting (bolding, lists, code fences) for readability.
+2. If the student has a problem or asks you to solve something: DO NOT just blurt out the final solution! Walk them through it step-by-step. Ask them what they think the next step is, or give a friendly hint.
+3. If the student has a known misconception about this topic, address the underlying intuition gently without making them feel judged.
+4. Ground your explanation in verified curriculum material:
+{grounded_context}
+5. End with a thoughtful comprehension check question or next step invitation.
+"""
+
+    messages = []
+    if req.history:
+        for h in req.history:
+            messages.append({"role": h.get("role", "user"), "content": h.get("content", "")})
+    messages.append({"role": "user", "content": req.message})
+
+    # 4. Generate with live Gemini LLM
+    try:
+        if os.environ.get("GEMINI_API_KEY") and not os.environ.get("AGENTX_DRY_RUN"):
+            llm = LLM()
+            reply = llm.generate(system_prompt, messages)
+        else:
+            raise RuntimeError("Dry run or offline mode")
+    except Exception as e:
+        # Fallback to adaptive tutor tool if offline
+        tutor_guide = json.loads(tools["adaptive_tutor"].execute(
+            topic=req.topic, style=req.teaching_style, student_level="intermediate"
+        ))
+        strategy_desc = tutor_guide.get("pedagogical_strategy", "")
+        reply = (
+            f"**Exploring {req.topic}** ({style_label} Mode):\n\n"
+            f"{strategy_desc}\n\n"
+        )
+        if grounded_context:
+            reply += f"**Key Curriculum Insight:**\n> {grounded_context}\n\n"
+        reply += f"Let's solve this step by step. What part of {req.topic} would you like to start with?"
+
+    # Extract or generate check question
+    check_q = f"What do you think is the next logical step in {req.topic}?"
+    if "?" in reply:
+        # Find last question in reply
+        questions = [line for line in reply.split("\n") if "?" in line]
+        if questions:
+            check_q = questions[-1].strip("*# ")
 
     return {
         "reply": reply,
@@ -252,4 +311,3 @@ def toggle_task(
     task.is_completed = not task.is_completed
     db.commit()
     return {"id": task.id, "is_completed": task.is_completed}
-

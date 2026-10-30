@@ -47,10 +47,10 @@ export const api = {
   getKnowledgeGraph: (subject) =>
     apiRequest(`/student/knowledge-graph${subject ? `?subject=${encodeURIComponent(subject)}` : ''}`),
   getStudentMisconceptions: () => apiRequest('/student/misconceptions'),
-  tutorChat: (topic, message, teachingStyle) =>
+  tutorChat: (topic, message, teachingStyle, history = []) =>
     apiRequest('/student/tutor/chat', {
       method: 'POST',
-      body: JSON.stringify({ topic, message, teaching_style: teachingStyle }),
+      body: JSON.stringify({ topic, message, teaching_style: teachingStyle, history }),
     }),
   getStudyPlans: () => apiRequest('/student/study-plans'),
   toggleStudyTask: (taskId) =>
@@ -81,4 +81,3 @@ export const api = {
       body: JSON.stringify({ query }),
     }),
 };
-
