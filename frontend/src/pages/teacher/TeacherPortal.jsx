@@ -576,3 +576,4 @@ export default function TeacherPortal() {
     </div>
   );
 }
+

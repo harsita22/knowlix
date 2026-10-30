@@ -74,3 +74,4 @@ export default function Navbar({ onNavigate, currentTab }) {
     </header>
   );
 }
+

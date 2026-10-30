@@ -255,3 +255,4 @@ class StudentLearningMemory(Base):
     memory_key = Column(String(100), nullable=False)
     memory_value = Column(Text, nullable=False)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+

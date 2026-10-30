@@ -5,3 +5,4 @@ Key Stages:
 1. Light-Dependent Reactions: Occur in the thylakoid membranes of chloroplasts. Chlorophyll pigments absorb solar photons, splitting water molecules (photolysis) to release oxygen gas and generate energetic ATP and NADPH molecules.
 2. Calvin Cycle (Light-Independent Reactions): Occurs in the stroma of the chloroplast. The enzyme RuBisCO fixes atmospheric carbon dioxide (CO2) utilizing the ATP and NADPH produced in the light reactions to synthesize high-energy sugars (glucose).
 Core Prerequisites: Cell Structure, Chloroplast anatomy, Energy transfer molecules (ATP/ADP).
+

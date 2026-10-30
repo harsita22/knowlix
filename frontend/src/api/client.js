@@ -81,3 +81,4 @@ export const api = {
       body: JSON.stringify({ query }),
     }),
 };
+

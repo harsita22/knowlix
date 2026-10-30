@@ -63,3 +63,4 @@ class AdaptiveTutorTool(Tool):
             response["caution_flag"] = f"Address this known misconception proactively: {known_misconceptions}"
 
         return json.dumps(response, indent=2)
+

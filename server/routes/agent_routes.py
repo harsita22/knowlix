@@ -47,3 +47,4 @@ def query_agent(
         return {"answer": answer, "trace": trace}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Agent execution error: {e}")
+

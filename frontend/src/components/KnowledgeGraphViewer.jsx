@@ -155,3 +155,4 @@ export default function KnowledgeGraphViewer({ graphData, onSelectTopic }) {
     </div>
   );
 }
+

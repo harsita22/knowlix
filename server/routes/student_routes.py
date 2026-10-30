@@ -252,3 +252,4 @@ def toggle_task(
     task.is_completed = not task.is_completed
     db.commit()
     return {"id": task.id, "is_completed": task.is_completed}
+
