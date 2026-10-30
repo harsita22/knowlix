@@ -102,4 +102,3 @@ class CurriculumRetrieval(Tool):
 
         results["summary"] = f"Found {len(results['matches'])} relevant curriculum reference(s)."
         return json.dumps(results, indent=2)
-
